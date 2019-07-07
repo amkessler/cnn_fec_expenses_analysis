@@ -26,9 +26,12 @@ expends_db <- expends_db %>%
 #pull candidate table from postgres db
 cand_db <- tbl(con, "cycle_2020_candidate")
 
-#filter only for presidential
+glimpse(cand_db)
+
+#filter only for presidential and democratic party
 candnames <- cand_db %>%
-  filter(district == "US") %>%
+  filter(district == "US",
+         party == "D") %>%
   select(name, fec_committee_id) %>%
   collect()
 
@@ -82,8 +85,7 @@ prez_travel <- prez_expends %>%
   filter(expenditure_year == 2019,
          str_detect(expenditure_purpose_descrip, "TRAVEL") |
            str_detect(expenditure_purpose_descrip, "TRANSPORTATION") |
-           str_detect(expenditure_purpose_descrip, "AIRFARE") |
-           str_detect(expenditure_purpose_descrip, "AIRLINE") |
+           str_detect(expenditure_purpose_descrip, "AIR") |
            str_detect(expenditure_purpose_descrip, "PLANE")
            ) 
 
@@ -107,13 +109,16 @@ air_search <- prez_travel %>%
 
 
 air_search %>% 
-  count(payee_organization_name) %>% 
-  View()
+  count(payee_organization_name) %>% View()
 
-#remember to examine the active vs. memo in the results
+#NOTE: remember to examine the active vs. memo in the results!
+
+#appears to be a record for possible charter flight by Warren:
+air_search %>% 
+  filter(payee_organization_name == "AIR CHARTER TEAM, INC.")# %>% View()
 
 
-#while we're at it, what's up with Airbnb expenses
+#while we're at it, what's up with Airbnb expenses?
 airbnb <- prez_travel %>% 
   filter(
     str_detect(payee_organization_name, "AIRBNB")
