@@ -126,6 +126,12 @@ air_search %>%
   filter(payee_organization_name == "AIR CHARTER TEAM, INC.") %>% 
   write_csv("output/warren_flight.csv")
 
+#appears to be a record for possible charter flight by Warren:
+air_search %>% 
+  filter(payee_organization_name == "ZEN AIR") %>% 
+  write_csv("output/zenair.csv")
+
+
 
 
 #while we're at it, what's up with Airbnb expenses?
