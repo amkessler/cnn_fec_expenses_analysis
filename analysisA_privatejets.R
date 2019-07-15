@@ -31,7 +31,7 @@ glimpse(cand_db)
 #filter only for presidential and democratic party
 candnames <- cand_db %>%
   filter(district == "US",
-         party == "D") %>%
+         party == "D",) %>%
   select(name, fec_committee_id) %>%
   collect()
 
@@ -53,6 +53,13 @@ prez_expends$expenditure_date <- ymd(prez_expends$expenditure_date)
 prez_expends$expenditure_year <- year(prez_expends$expenditure_date)
 prez_expends$expenditure_month <- month(prez_expends$expenditure_date)
 prez_expends$expenditure_day <- day(prez_expends$expenditure_date)
+
+#filter by date 
+prez_expends <- prez_expends %>% 
+  filter(expenditure_year == 2019,
+         expenditure_month >= 4)
+
+
 
 
 prez_expends %>% 
@@ -104,7 +111,8 @@ air_search <- prez_travel %>%
          filter(
            str_detect(payee_organization_name, "AIR"),	
            !str_detect(payee_organization_name, "FAIRFIELD INN"),
-           !str_detect(payee_organization_name, "AIRBNB")
+           !str_detect(payee_organization_name, "AIRBNB"),
+           !str_detect(payee_organization_name, "AIRPORT ")
                 )
 
 
