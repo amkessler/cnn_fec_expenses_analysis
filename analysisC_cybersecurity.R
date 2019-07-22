@@ -112,3 +112,19 @@ prez_cyber <- prez_expends %>%
 # save to file
 write_xlsx(prez_cyber, "output/prez_cyber.xlsx")
 
+
+
+### LOOKING FOR POSSIBLE SECURITY/NETWORK CATEGORIES FOR FURTHER REPORTING ##### -------------------------
+
+prez_security <- prez_expends %>% 
+  filter(
+    str_detect(expenditure_purpose_descrip, "SECURITY") |
+      str_detect(expenditure_purpose_descrip, "SECURE") |
+      str_detect(expenditure_purpose_descrip, "NETWORK") |
+      str_detect(payee_organization_name, "SECURITY") |
+      str_detect(payee_organization_name, "SECURE") |
+      str_detect(payee_organization_name, "NETWORK")
+  ) 
+
+# save to file
+write_xlsx(prez_security, "output/prez_security.xlsx")
