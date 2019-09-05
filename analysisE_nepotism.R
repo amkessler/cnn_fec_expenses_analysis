@@ -44,25 +44,20 @@ fec_committee_list_housecands <- fec_committee_list_housecands %>%
 
 
 #join
-joined_incumbent_list <- left_join(house_incumbents_list, fec_committee_list_housecands) #handful of candidates have multiple active cmtes
+joined_incumbents <- left_join(house_incumbents_list, fec_committee_list_housecands) #handful of candidates have multiple active cmtes
 
 
 
+#now we'll get the data from the big FEC database for those committees ####
 
-
-
-
-
-
-
-
-#grab prez committee ids
-prez_cmte_ids <- candnames %>% pull(fec_committee_id)
+#grab committee ids
+incumbent_cmte_ids <- joined_incumbents %>% pull(cmte_id)
 
 #filter the contribs table by them and then collect locally
-prez_expends <- expends_db %>%
-  filter(filer_committee_id_number %in% prez_cmte_ids) %>% 
+hinc_expends <- expends_db %>%
+  filter(filer_committee_id_number %in% incumbent_cmte_ids) %>% 
   collect()
+
 
 #join to add candidate name to table
 prez_expends <- prez_expends %>% 
