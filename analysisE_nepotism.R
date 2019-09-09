@@ -5,6 +5,7 @@ library(tidyverse)
 library(lubridate)
 library(janitor)
 library(dbplyr)
+library(writexl)
 
 #list the tables in the database
 src_dbi(con)
@@ -118,4 +119,7 @@ possible_matches <- hinc_expends %>%
   ) 
 
 possible_matches
+
+#save results
+write_xlsx(possible_matches, "output/possible_matches.xlsx")
 
