@@ -53,105 +53,69 @@ joined_incumbents <- left_join(house_incumbents_list, fec_committee_list_houseca
 #grab committee ids
 incumbent_cmte_ids <- joined_incumbents %>% pull(cmte_id)
 
-#filter the contribs table by them and then collect locally
+
+
+
+### RUN ONE OF THE FOLLOWING TWO CHUNKS ##################################################
+
+#1)
+#filter the main fec contribs table then collect to local dataframe
 hinc_expends <- expends_db %>%
   filter(filer_committee_id_number %in% incumbent_cmte_ids) %>% 
   collect()
 
+saveRDS(hinc_expends, "processed_data/hinc_expends.rds")
 
-#join to add candidate name to table
-prez_expends <- prez_expends %>% 
-  left_join(candnames, by = c("filer_committee_id_number" = "fec_committee_id")) %>% 
-  select(name, everything())
 
-#date format and derived columns
-prez_expends$expenditure_date <- ymd(prez_expends$expenditure_date)
-prez_expends$expenditure_year <- year(prez_expends$expenditure_date)
-prez_expends$expenditure_month <- month(prez_expends$expenditure_date)
-prez_expends$expenditure_day <- day(prez_expends$expenditure_date)
+#2)
+#load from saved version of the collected records
+hinc_expends <- readRDS("processed_data/hinc_expends.rds")
 
-#filter by date 
-prez_expends <- prez_expends %>% 
-  filter(expenditure_year == 2019,
-         expenditure_month >= 4)
+
+###########################################################################################
 
 
 
 
-prez_expends %>% 
-  filter(expenditure_year == 2019) %>% 
-  group_by(status) %>% 
-  summarise(n(), sum(expenditure_amount))
-
-prez_expends %>% 
-  filter(expenditure_year == 2019) %>% 
-  group_by(name, status) %>% 
-  summarise(n(), sum(expenditure_amount))
+#date formatting and derived columns
+hinc_expends$expenditure_date <- ymd(hinc_expends$expenditure_date)
+hinc_expends$expenditure_year <- year(hinc_expends$expenditure_date)
+hinc_expends$expenditure_month <- month(hinc_expends$expenditure_date)
+hinc_expends$expenditure_day <- day(hinc_expends$expenditure_date)
 
 
-prez_expends %>% 
-  filter(expenditure_year == 2019,
-         status == "ACTIVE") %>% 
-  group_by(name) %>% 
-  summarise(num = n(), tot_amt = sum(expenditure_amount)) %>% 
-  arrange(desc(tot_amt))
+#join new expends table to incumbent data to add candidate name and details
+hinc_expends <- hinc_expends %>% 
+  left_join(joined_incumbents, by = c("filer_committee_id_number" = "cmte_id")) %>% 
+  select(name, office_full, party, state, district, everything())
+
+#split candidate name to extract last name as own column
+hinc_expends$candname_last <- str_split(hinc_expends$name, ",", simplify = TRUE)[, 1]
+hinc_expends$candname_last <- str_trim(hinc_expends$candname_last)
+
+hinc_expends <- hinc_expends %>% 
+  select(candname_last, everything())
+
+glimpse(hinc_expends)
 
 
-# attempt to isolate travel expenses ####
-prez_expends <- prez_expends %>% 
+#uppercase the payee fields to ensure compatible joining
+hinc_expends <- hinc_expends %>% 
   mutate(
-    expenditure_purpose_descrip = str_squish(str_to_upper(expenditure_purpose_descrip)),
-    payee_organization_name = str_squish(str_to_upper(payee_organization_name))
+    payee_organization_name = str_to_upper(str_trim(payee_organization_name)),
+    payee_last_name = str_to_upper(str_trim(payee_last_name)),
+    conduit_name = str_to_upper(str_trim(conduit_name))
   )
 
-prez_travel <- prez_expends %>% 
-  filter(expenditure_year == 2019,
-         str_detect(expenditure_purpose_descrip, "TRAVEL") |
-           str_detect(expenditure_purpose_descrip, "TRANSPORTATION") |
-           str_detect(expenditure_purpose_descrip, "AIR") |
-           str_detect(expenditure_purpose_descrip, "PLANE")
-           ) 
 
-#see the desc variations
-prez_travel %>% 
-  count(expenditure_purpose_descrip) 
-
-#check amounts for active vs. memo
-prez_travel %>% 
-  group_by(status) %>% 
-  summarise(n(), sum(expenditure_amount))
-
-
-#look for possible airline mentions as payee
-air_search <- prez_travel %>% 
-         filter(
-           str_detect(payee_organization_name, "AIR"),	
-           !str_detect(payee_organization_name, "FAIRFIELD INN"),
-           !str_detect(payee_organization_name, "AIRBNB"),
-           !str_detect(payee_organization_name, "AIRPORT ")
-                )
-
-
-air_search %>% 
-  count(payee_organization_name) %>% View()
-
-#NOTE: remember to examine the active vs. memo in the results!
-
-#appears to be a record for possible charter flight by Warren:
-air_search %>% 
-  filter(payee_organization_name == "AIR CHARTER TEAM, INC.") %>% 
-  write_csv("output/warren_flight.csv")
-
-#appears to be a record for possible charter flight by Warren:
-air_search %>% 
-  filter(payee_organization_name == "ZEN AIR") %>% 
-  write_csv("output/zenair.csv")
-
-
-
-
-#while we're at it, what's up with Airbnb expenses?
-airbnb <- prez_travel %>% 
+#now the matching
+#look for matches of cand's last name with payee fields ####
+possible_matches <- hinc_expends %>% 
   filter(
-    str_detect(payee_organization_name, "AIRBNB")
-  )
+    # str_detect(payee_organization_name, candname_last) |
+    str_detect(payee_last_name, candname_last) |
+    str_detect(conduit_name, candname_last)
+  ) 
+
+possible_matches
+
