@@ -6,6 +6,7 @@ library(lubridate)
 library(janitor)
 library(dbplyr)
 library(writexl)
+library(readxl)
 
 #list the tables in the database
 src_dbi(con)
@@ -76,7 +77,7 @@ hinc_expends <- readRDS("processed_data/hinc_expends.rds")
 ###########################################################################################
 
 
-
+## HOUSE CANDIDATES
 
 #date formatting and derived columns
 hinc_expends$expenditure_date <- ymd(hinc_expends$expenditure_date)
@@ -252,5 +253,87 @@ possible_matches
 
 #save results
 write_xlsx(possible_matches, "output/possible_matches_SENATE.xlsx")
+
+
+
+
+################################################################################
+#### NOW WE'LL DO THE LEADERSHIP PACS ##########################################
+################################################################################
+
+
+#import leadership pac file 
+fec_committee_list_leadpacs <- read_excel("raw_data/leadership_pacs_2020cycle.xlsx", 
+                                        sheet = "sponsored")
+
+fec_committee_list_leadpacs <- fec_committee_list_leadpacs %>% 
+  clean_names()
+
+
+#now we'll get the data from the big FEC database for those committees ####
+
+#grab committee ids
+leadpacs_cmte_ids <- fec_committee_list_leadpacs %>% pull(cmte_id)
+
+
+
+### RUN ONE OF THE FOLLOWING TWO CHUNKS ##################################################
+
+#1)
+#filter the main fec contribs table then collect to local dataframe
+leadpacs_expends <- expends_db %>%
+  filter(filer_committee_id_number %in% leadpacs_cmte_ids) %>% 
+  collect()
+
+saveRDS(leadpacs_expends, "processed_data/leadpacs_expends.rds")
+
+
+#2)
+#load from saved version of the collected records
+leadpacs_expends <- readRDS("processed_data/leadpacs_expends.rds")
+
+
+###########################################################################################
+
+
+## HOUSE CANDIDATES
+
+#date formatting and derived columns
+leadpacs_expends$expenditure_date <- ymd(leadpacs_expends$expenditure_date)
+leadpacs_expends$expenditure_year <- year(leadpacs_expends$expenditure_date)
+leadpacs_expends$expenditure_month <- month(leadpacs_expends$expenditure_date)
+leadpacs_expends$expenditure_day <- day(leadpacs_expends$expenditure_date)
+
+
+#join new expends table to leadership pac list to add candidate name and details
+leadpacs_expends <- leadpacs_expends %>% 
+  left_join(fec_committee_list_leadpacs, by = c("filer_committee_id_number" = "cmte_id")) %>% 
+  select(cmte_name, sponsor_name, candname_last = cand_last_name, everything())
+
+glimpse(leadpacs_expends)
+
+
+#uppercase the payee fields to ensure compatible joining
+leadpacs_expends <- leadpacs_expends %>% 
+  mutate(
+    payee_organization_name = str_to_upper(str_trim(payee_organization_name)),
+    payee_last_name = str_to_upper(str_trim(payee_last_name)),
+    conduit_name = str_to_upper(str_trim(conduit_name))
+  )
+
+
+#now the matching
+#look for matches of cand's last name with payee fields ####
+possible_matches <- leadpacs_expends %>% 
+  filter(
+    # str_detect(payee_organization_name, candname_last) |
+    str_detect(payee_last_name, candname_last) |
+      str_detect(conduit_name, candname_last)
+  ) 
+
+possible_matches
+
+#save results
+write_xlsx(possible_matches, "output/possible_matches.xlsx")
 
 
