@@ -313,12 +313,13 @@ leadpacs_expends <- leadpacs_expends %>%
 glimpse(leadpacs_expends)
 
 
-#uppercase the payee fields to ensure compatible joining
+#uppercase fields to ensure compatible joining
 leadpacs_expends <- leadpacs_expends %>% 
   mutate(
     payee_organization_name = str_to_upper(str_trim(payee_organization_name)),
     payee_last_name = str_to_upper(str_trim(payee_last_name)),
-    conduit_name = str_to_upper(str_trim(conduit_name))
+    conduit_name = str_to_upper(str_trim(conduit_name)),
+    candname_last = str_to_upper(str_trim(candname_last)),
   )
 
 
@@ -328,12 +329,13 @@ possible_matches <- leadpacs_expends %>%
   filter(
     # str_detect(payee_organization_name, candname_last) |
     str_detect(payee_last_name, candname_last) |
-      str_detect(conduit_name, candname_last)
+      str_detect(conduit_name, candname_last) |
+      str_detect(payee_organization_name, candname_last)
   ) 
 
 possible_matches
 
 #save results
-write_xlsx(possible_matches, "output/possible_matches.xlsx")
+write_xlsx(possible_matches, "output/possible_matches_leadpacs.xlsx")
 
 
