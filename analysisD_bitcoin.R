@@ -102,5 +102,5 @@ prez_crypto <- prez_expends %>%
       ) 
 
 # save to file
-write_xlsx(prez_crypto, "output/prez_crypto.xlsx")
+# write_xlsx(prez_crypto, "output/prez_crypto.xlsx")
 
