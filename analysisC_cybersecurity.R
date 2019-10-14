@@ -110,7 +110,7 @@ prez_cyber <- prez_expends %>%
 
 
 # save to file
-write_xlsx(prez_cyber, "output/prez_cyber.xlsx")
+# write_xlsx(prez_cyber, "output/prez_cyber.xlsx")
 
 
 
@@ -127,4 +127,4 @@ prez_security <- prez_expends %>%
   ) 
 
 # save to file
-write_xlsx(prez_security, "output/prez_security.xlsx")
+# write_xlsx(prez_security, "output/prez_security.xlsx")
