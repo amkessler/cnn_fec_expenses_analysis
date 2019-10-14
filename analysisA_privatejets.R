@@ -123,13 +123,11 @@ air_search %>%
 
 #appears to be a record for possible charter flight by Warren:
 air_search %>% 
-  filter(payee_organization_name == "AIR CHARTER TEAM, INC.") %>% 
-  write_csv("output/warren_flight.csv")
+  filter(payee_organization_name == "AIR CHARTER TEAM, INC.") 
 
 #appears to be a record for possible charter flight by Warren:
 air_search %>% 
-  filter(payee_organization_name == "ZEN AIR") %>% 
-  write_csv("output/zenair.csv")
+  filter(payee_organization_name == "ZEN AIR") 
 
 
 
