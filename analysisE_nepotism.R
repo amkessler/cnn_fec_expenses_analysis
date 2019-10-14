@@ -122,7 +122,7 @@ possible_matches <- hinc_expends %>%
 possible_matches
 
 #save results
-write_xlsx(possible_matches, "output/possible_matches.xlsx")
+# write_xlsx(possible_matches, "output/possible_matches.xlsx")
 
 
 
@@ -252,7 +252,7 @@ possible_matches <- sinc_expends %>%
 possible_matches
 
 #save results
-write_xlsx(possible_matches, "output/possible_matches_SENATE.xlsx")
+# write_xlsx(possible_matches, "output/possible_matches_SENATE.xlsx")
 
 
 
@@ -336,6 +336,6 @@ possible_matches <- leadpacs_expends %>%
 possible_matches
 
 #save results
-write_xlsx(possible_matches, "output/possible_matches_leadpacs.xlsx")
+# write_xlsx(possible_matches, "output/possible_matches_leadpacs.xlsx")
 
 
