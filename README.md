@@ -1,2 +1,2 @@
-# cnn_fec_expenses_analysis
+# fec_expenses_analysis
 analysis of FEC data on candidates' expenses
